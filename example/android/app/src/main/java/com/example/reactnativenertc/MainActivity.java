@@ -1,10 +1,28 @@
 package com.example.reactnativenertc;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+
+import com.example.reactnativenertc.utils.SystemPermissionUtils;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 
+import java.util.List;
+
 public class MainActivity extends ReactActivity {
+
+  private static final String TAG = "MainActivity";
+  private static final int PERMISSION_REQUEST_CODE = 100;
+  private ScreenShareServiceConnection mServiceConnection;
+  private NERtcScreenShareService mScreenService;
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -37,4 +55,55 @@ public class MainActivity extends ReactActivity {
       return reactRootView;
     }
   }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    requestPermissionsIfNeeded();
+    bindScreenService();
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    unbindScreenService();
+  }
+
+  private void requestPermissionsIfNeeded() {
+    final List<String> missedPermissions = SystemPermissionUtils.checkPermission(this);
+    if (missedPermissions.size() > 0) {
+      ActivityCompat.requestPermissions(this, missedPermissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+    }
+  }
+
+
+  private void bindScreenService() {
+    Intent intent = new Intent();
+    intent.setClass(this, NERtcScreenShareService.class);
+    mServiceConnection = new ScreenShareServiceConnection();
+    bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+  }
+
+  private void unbindScreenService() {
+    if (mServiceConnection != null) {
+      unbindService(mServiceConnection);
+    }
+  }
+
+  private class ScreenShareServiceConnection implements ServiceConnection {
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder service) {
+
+      if (service instanceof NERtcScreenShareService.ScreenShareBinder) {
+        mScreenService = ((NERtcScreenShareService.ScreenShareBinder) service).getService();
+        Log.i(TAG, "onServiceConnect");
+      }
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+      mScreenService = null;
+    }
+  }
+
 }
