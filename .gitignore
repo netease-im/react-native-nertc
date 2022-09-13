@@ -74,3 +74,6 @@ lib/
 example/.ruby-version
 example/Gemfile
 example/Gemfile.lock
+
+# docs
+docs/

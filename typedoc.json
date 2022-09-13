@@ -1,0 +1,10 @@
+{
+  "entryPoints": [
+    "./src/index.ts",
+    "./src/typings/index.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "readme": "./README.md"
+}
